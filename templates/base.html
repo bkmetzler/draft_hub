@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Draft Hub{% endblock %}</title>
+    <style>
+      body { font-family: system-ui, -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; background: #f4f6f8; }
+      header { background: #143865; color: #fff; padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center; }
+      header a { color: #fff; margin-right: 1rem; text-decoration: none; font-weight: 500; }
+      header .nav-right a { margin-left: 1rem; }
+      main { padding: 2rem; max-width: 960px; margin: 0 auto; }
+      .flash { padding: 0.75rem 1rem; border-radius: 4px; margin-bottom: 1rem; }
+      .flash.success { background: #d1fae5; color: #065f46; }
+      .flash.danger { background: #fee2e2; color: #991b1b; }
+      .flash.warning { background: #fef3c7; color: #92400e; }
+      .flash.info { background: #dbeafe; color: #1e3a8a; }
+      form label { display: block; margin-top: 1rem; font-weight: 600; }
+      form input[type="text"],
+      form input[type="email"],
+      form input[type="password"],
+      form textarea { width: 100%; padding: 0.5rem; border: 1px solid #cbd5f5; border-radius: 4px; }
+      button, .btn { background: #143865; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; text-decoration: none; display: inline-block; }
+      button.secondary, .btn.secondary { background: #64748b; }
+      .card { background: white; padding: 1.25rem; border-radius: 6px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 1.5rem; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div>
+        <a href="{{ url_for('index') }}" class="brand">Draft Hub</a>
+        <a href="{{ url_for('index') }}">Tenants</a>
+        {% if g.user %}
+          <a href="{{ url_for('create_tenant') }}">New Tenant</a>
+        {% endif %}
+      </div>
+      <div class="nav-right">
+        {% if g.user %}
+          <span>Signed in as <strong>{{ g.user.username }}</strong></span>
+          <a href="{{ url_for('logout') }}">Logout</a>
+        {% else %}
+          <a href="{{ url_for('login') }}">Login</a>
+          <a href="{{ url_for('register') }}">Register</a>
+        {% endif %}
+      </div>
+    </header>
+    <main>
+      {% for category, message in get_flashed_messages(with_categories=True) %}
+        <div class="flash {{ category }}">{{ message }}</div>
+      {% endfor %}
+      {% block content %}{% endblock %}
+    </main>
+  </body>
+</html>

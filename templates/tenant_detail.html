@@ -1,0 +1,34 @@
+{% extends 'base.html' %}
+{% block title %}{{ tenant.name }} · Tenant · Draft Hub{% endblock %}
+{% block content %}
+  <div class="card">
+    <h1>{{ tenant.name }}</h1>
+    {% if tenant.description %}
+      <p>{{ tenant.description }}</p>
+    {% endif %}
+    <p>Created {{ tenant.created_at.strftime('%Y-%m-%d %H:%M UTC') }} · {{ tenant.projects|length }} project(s)</p>
+    {% if g.user %}
+      <a class="btn" href="{{ url_for('create_project', tenant_id=tenant.id) }}">New Project</a>
+    {% endif %}
+  </div>
+
+  <section>
+    <h2>Projects</h2>
+    {% if tenant.projects %}
+      {% for project in tenant.projects %}
+        <div class="card">
+          <h3><a href="{{ url_for('project_detail', project_id=project.id) }}">{{ project.name }}</a></h3>
+          {% if project.description %}
+            <p>{{ project.description }}</p>
+          {% endif %}
+          <p>{{ project.docs|length }} document(s)</p>
+          {% if g.user %}
+            <a class="btn" href="{{ url_for('create_doc', project_id=project.id) }}">New Document</a>
+          {% endif %}
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No projects yet.</p>
+    {% endif %}
+  </section>
+{% endblock %}

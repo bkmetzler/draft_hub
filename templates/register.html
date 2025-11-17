@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}Register · Draft Hub{% endblock %}
+{% block content %}
+  <h1>Create an Account</h1>
+  <form method="post">
+    <label for="username">Username</label>
+    <input type="text" name="username" id="username" required>
+
+    <label for="email">Email</label>
+    <input type="email" name="email" id="email" required>
+
+    <label for="password">Password</label>
+    <input type="password" name="password" id="password" required>
+
+    <label for="confirm">Confirm Password</label>
+    <input type="password" name="confirm" id="confirm" required>
+
+    <button type="submit">Register</button>
+  </form>
+  <p>Already have an account? <a href="{{ url_for('login') }}">Log in</a>.</p>
+{% endblock %}
