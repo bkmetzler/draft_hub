@@ -1,0 +1,14 @@
+venv
+.idea/
+*.py[cidx]
+venv
+.idea/
+__pycache__/
+*.py[cdixo]
+test.py
+env
+
+# Jupyter Notebook files
+.ipynb_checkpoints/
+.jupyter/
+*.ipynb
