@@ -1,0 +1,37 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "draft-hub"
+version = "0.1.0"
+description = "Collaborative workspace for drafting and voting on amendments."
+readme = "README.md"
+authors = [
+    { name = "Draft Hub" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "Flask==3.0.3",
+    "Flask-SQLAlchemy==3.1.1",
+    "Werkzeug==3.0.2",
+    "PyJWT==2.8.0",
+    "pydantic-settings==2.2.1",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pre-commit>=3.7,<4",
+]
+
+[tool.setuptools]
+py-modules = ["app"]
+
+[tool.black]
+line-length = 120
+target-version = ["py312"]
+
+[tool.ruff]
+line-length = 120
+select = ["E", "F", "I"]
+
