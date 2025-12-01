@@ -23,8 +23,10 @@ to finalize changes after the community has weighed in.
 ## Tech Stack
 
 - Python 3.12
-- Flask 3 with Flask-SQLAlchemy
-- SQLite database stored in `docs.db`
+- FastAPI with SQLModel and Alembic-ready database layer
+- Redis (optional) for future caching
+- SQLite database stored in `docs.db` by default
+- React + Material UI front end (Vite dev server)
 
 ## Getting Started
 
@@ -45,57 +47,45 @@ pip install -r requirements.txt
 
 ### 3. Initialize the database
 
-Create the SQLite tables with the Flask CLI command:
+Create the SQLite tables with the FastAPI lifespan hook (called automatically when the server starts) or by importing the
+`create_db_and_tables` helper:
 
 ```bash
-flask --app app init-db
+python -c "from app.database import create_db_and_tables; create_db_and_tables()"
 ```
 
-(Alternatively, running `python app.py` once will create the database automatically.)
+### 4. Run the API server
 
-### 4. Run the development server
-
-Use the Flask CLI with auto-reload and debugger enabled:
+Launch FastAPI with uvicorn:
 
 ```bash
-flask --app app run --debug
+uvicorn app.main:app --reload
 ```
 
-You can also run the module directly:
+The server exposes JWT-backed routes for authentication (`/auth/login`, `/auth/register`), user info (`/users/me`), tenants,
+documents, amendments, and voting.
+
+### 5. Run the React UI
+
+Install the UI dependencies and start the Vite dev server:
 
 ```bash
-python app.py
+cd ui
+npm install
+npm run start
 ```
 
-Then open http://127.0.0.1:5000/ in your browser and start drafting laws!
-
-### 5. Requesting JWT tokens
-
-The app exposes a simple bearer-token API that surfaces project documents.
-
-1. Request a token:
-
-   ```bash
-   curl -X POST http://127.0.0.1:5000/api/token \
-     -H "Content-Type: application/json" \
-     -d '{"username": "youruser", "password": "yourpass"}'
-   ```
-
-2. Use the returned token when calling JWT-protected endpoints, such as:
-
-   ```bash
-   curl http://127.0.0.1:5000/api/projects/1/docs \
-     -H "Authorization: Bearer <token>"
-   ```
-
-Tokens expire after one hour by default.
+Open http://localhost:5173 to access the Material UI front end that provides copy/paste document intake, file upload, diff
+visualization, voting previews, and a client-side JWT locker.
 
 ## Project Structure
 
 ```
-app.py              # Flask application and models
+app.py              # Legacy Flask application and models
+app/                # FastAPI application source (SQLModel models, routers, security)
+ui/                 # React front end (Vite + Material UI)
+migrations/         # Alembic migrations (seed folder)
 requirements.txt    # Python dependencies
-templates/          # Jinja templates for pages
 README.md           # This file
 ```
 
