@@ -3,25 +3,22 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlmodel import Session, select
 
+from app.database.models import User, UserPasswordHash, datetime_now
 from ..database import get_session
-from ..models import User, UserPasswordHash, datetime_now
 from ..security import create_access_token, hash_password, verify_password
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
 @router.post("/register")
-def register(username: str, email: str, password: str, session: Session = Depends(get_session)):
-    username = username.strip()
+def register(email: str, password: str, session: Session = Depends(get_session)):
     email = email.strip().lower()
 
-    if session.exec(select(User).where(User.username == username)).first():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already registered")
     if session.exec(select(User).where(User.email == email)).first():
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
 
     hashed = hash_password(password)
-    user = User(username=username, email=email, password_hash=hashed)
+    user = User(email=email, password_hash=hashed)
     session.add(user)
     session.flush()
     session.add(UserPasswordHash(user_id=user.id, password_hash=hashed, created_at=datetime_now()))
@@ -41,9 +38,9 @@ def login(username: str, password: str, session: Session = Depends(get_session))
 
 @router.post("/reset-password")
 def reset_password(
-    username: str,
-    new_password: str,
-    session: Session = Depends(get_session),
+        username: str,
+        new_password: str,
+        session: Session = Depends(get_session),
 ):
     user = session.exec(select(User).where(User.username == username)).first()
     if user is None:

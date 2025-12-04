@@ -9,9 +9,9 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlmodel import Session, select
 from werkzeug.security import check_password_hash, generate_password_hash
 
-from .config import get_settings
+from app.database.models import GroupMembership, User
+from .settings import get_settings
 from .database import get_session
-from .models import GroupMembership, User
 
 bearer_scheme = HTTPBearer(auto_error=False)
 settings = get_settings()
@@ -27,7 +27,7 @@ def verify_password(raw_password: str, hashed: str) -> bool:
 
 def create_access_token(user: User) -> tuple[str, datetime]:
     expiration = datetime.now(tz=timezone.utc) + timedelta(minutes=settings.jwt_expiration_minutes)
-    payload = {"sub": user.id, "username": user.username, "exp": expiration}
+    payload = {"sub": user.id, "email": user.email, "exp": expiration}
     token = jwt.encode(payload, settings.secret_key, algorithm="HS256")
     return token, expiration
 
@@ -42,8 +42,8 @@ def decode_jwt(token: str) -> dict:
 
 
 def decode_jwt_and_groups(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-    session: Session = Depends(get_session),
+        credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+        session: Session = Depends(get_session),
 ) -> tuple[User, List[str]]:
     if credentials is None or not credentials.credentials:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
@@ -63,8 +63,8 @@ def decode_jwt_and_groups(
 
 
 def get_current_user(
-    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-    session: Session = Depends(get_session),
+        credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+        session: Session = Depends(get_session),
 ) -> User:
     user, _ = decode_jwt_and_groups(credentials, session)  # type: ignore[arg-type]
     return user
