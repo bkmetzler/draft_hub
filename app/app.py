@@ -3,11 +3,12 @@ from dataclasses import dataclass
 from typing import Generator, AsyncGenerator
 
 from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
 
+
+from .middleware.configure import configure_middleware
 from .settings import get_settings, Settings
 from .database import create_db_and_tables
-from .routers import amendments, auth, tenants, users
+from .routers import amendments, auth, tenants, users, general
 
 
 @dataclass
@@ -23,25 +24,21 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     yield
 
 
+ROUTES = [
+    general.router,
+    users.router,
+    auth.router,
+    amendments.router,
+    tenants.router,
+]
+
 def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title=settings.app_name, lifespan=lifespan)
 
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    configure_middleware(app)
 
-    @app.get("/health")
-    def healthcheck():
-        return {"status": "ok"}
-
-    app.include_router(auth.router)
-    app.include_router(users.router)
-    app.include_router(tenants.router)
-    app.include_router(amendments.router)
+    for route in ROUTES:
+        app.include_router(route)
 
     return app

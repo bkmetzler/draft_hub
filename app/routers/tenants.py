@@ -3,11 +3,11 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
-from app.database.models import Document, DocumentTenant, Project, Tenant
+from app.database.models import Document, DocumentTenant, Project, Tenant, User
 from ..database import get_session
 from ..security import get_current_user
 
-router = APIRouter(prefix="/tenants", tags=["tenants"])
+router = APIRouter(prefix="/tenant", tags=["Tenants"])
 
 
 @router.get("/")
@@ -19,12 +19,17 @@ def list_tenants(session: Session = Depends(get_session)):
 @router.post("/")
 def create_tenant(
         name: str, description: str | None = None, session: Session = Depends(get_session),
-        user=Depends(get_current_user)
+        user: User = Depends(get_current_user)
 ):
     if session.exec(select(Tenant).where(Tenant.name == name)).first():
         raise HTTPException(status_code=400, detail="Tenant already exists")
     tenant = Tenant(name=name, description=description)
-    session.add(tenant)
+    session.merge(tenant)
+    tenant.groups.append(
+        
+
+    )
+
     session.commit()
     session.refresh(tenant)
     return tenant
@@ -72,20 +77,3 @@ def create_document(
     session.commit()
     session.refresh(document)
     return document
-
-
-@router.get("/{tenant_id}/projects/{project_id}/documents/{document_id}")
-def document_detail(tenant_id: int, project_id: int, document_id: int, session: Session = Depends(get_session)):
-    document = session.get(Document, document_id)
-    if document is None or document.project_id != project_id:
-        raise HTTPException(status_code=404, detail="Document not found")
-    if session.exec(
-            select(DocumentTenant).where(DocumentTenant.document_id == document_id,
-                                         DocumentTenant.tenant_id == tenant_id)
-    ).first() is None:
-        raise HTTPException(status_code=404, detail="Document not found for tenant")
-    session.refresh(document)
-    return {
-        "document": document,
-        "amendments": document.amendments,
-    }

@@ -1,30 +1,31 @@
+from typing import Optional
+
 from fastapi import APIRouter
 from fastapi import Depends
 from fastapi import HTTPException
 from sqlmodel import Session
 from sqlmodel import select
 
-
-# from .helpers import render_diff
+from .helpers.diff import render_diff
 from ..database import get_session
-from ..database.models import Amendment
+from ..database.models import Amendment, User
 from ..database.models import AmendmentPatch
 from ..database.models import Document
 from ..database.models import Patch
 from ..database.models import Vote
 from ..security import get_current_user
 
-router = APIRouter(prefix="/amendments", tags=["amendments"])
+router = APIRouter(prefix="/amendment", tags=["Amendment"])
 
 
-@router.post("/documents/{document_id}")
+@router.post("/document/{document_id}")
 def propose_amendment(
         document_id: int,
         title: str,
-        description: str | None = None,
+        description: Optional[str],
         proposed_text: str = "",
         session: Session = Depends(get_session),
-        user=Depends(get_current_user),
+        user: User = Depends(get_current_user),
 ):
     document = session.get(Document, document_id)
     if document is None:
