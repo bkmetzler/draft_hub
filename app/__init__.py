@@ -1,3 +1,7 @@
-from .main import app
+from app.app import create_app
 
-__all__ = ["app"]
+app = create_app()
+
+__all__ = [
+    "app"
+]

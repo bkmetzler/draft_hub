@@ -1,34 +1,31 @@
-from __future__ import annotations
+from typing import Optional
 
-from difflib import ndiff
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from sqlmodel import Session
+from sqlmodel import select
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import Session, select
-
+from .helpers.diff import render_diff
 from ..database import get_session
-from ..models import Amendment, AmendmentPatch, Document, Patch, Vote
+from ..database.models import Amendment, User
+from ..database.models import AmendmentPatch
+from ..database.models import Document
+from ..database.models import Patch
+from ..database.models import Vote
 from ..security import get_current_user
 
-router = APIRouter(prefix="/amendments", tags=["amendments"])
+router = APIRouter(prefix="/amendment", tags=["Amendment"])
 
 
-def render_diff(original: str, updated: str) -> list[dict[str, str]]:
-    diff_lines = []
-    for line in ndiff(original.splitlines(), updated.splitlines()):
-        code = line[0]
-        text = line[2:]
-        diff_lines.append({"op": code, "text": text})
-    return diff_lines
-
-
-@router.post("/documents/{document_id}")
+@router.post("/document/{document_id}")
 def propose_amendment(
-    document_id: int,
-    title: str,
-    description: str | None = None,
-    proposed_text: str = "",
-    session: Session = Depends(get_session),
-    user=Depends(get_current_user),
+        document_id: int,
+        title: str,
+        description: Optional[str],
+        proposed_text: str = "",
+        session: Session = Depends(get_session),
+        user: User = Depends(get_current_user),
 ):
     document = session.get(Document, document_id)
     if document is None:
@@ -48,11 +45,11 @@ def propose_amendment(
 
 @router.post("/{amendment_id}/patches")
 def attach_patch(
-    amendment_id: int,
-    patch_text: str,
-    description: str | None = None,
-    session: Session = Depends(get_session),
-    user=Depends(get_current_user),
+        amendment_id: int,
+        patch_text: str,
+        description: str | None = None,
+        session: Session = Depends(get_session),
+        user=Depends(get_current_user),
 ):
     amendment = session.get(Amendment, amendment_id)
     if amendment is None:
@@ -91,9 +88,7 @@ def vote(amendment_id: int, value: int, session: Session = Depends(get_session),
     amendment = session.get(Amendment, amendment_id)
     if amendment is None:
         raise HTTPException(status_code=404, detail="Amendment not found")
-    existing = session.exec(
-        select(Vote).where(Vote.amendment_id == amendment_id, Vote.user_id == user.id)
-    ).first()
+    existing = session.exec(select(Vote).where(Vote.amendment_id == amendment_id, Vote.user_id == user.id)).first()
     if existing:
         existing.value = value
         session.add(existing)

@@ -1,19 +1,36 @@
 from __future__ import annotations
 
+from typing import Sequence
+
 from fastapi import APIRouter, Depends
-from sqlmodel import Session
+from sqlmodel import Session, select
 
 from ..database import get_session
-from ..models import User
-from ..security import decode_jwt_and_groups
+from ..database.models import User
+from ..security import decode_jwt_and_groups, get_current_user
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix="/user", tags=["Users"], dependencies=[Depends(get_session)])
+
+
+@router.get("/whoami")
+async def get_who_am_i(
+        payload=Depends(decode_jwt_and_groups),
+):
+    user, groups = payload
+    return {"id": user.id, "email": user.email, "groups": [group.name for group in user.groups]}
 
 
 @router.get("/me")
 def current_user(
-    payload=Depends(decode_jwt_and_groups),
-    session: Session = Depends(get_session),
+        user: User = Depends(get_current_user),
 ):
-    user, groups = payload
-    return {"id": user.id, "username": user.username, "email": user.email, "groups": groups}
+    return {"id": user.id, "email": user.email, "groups": [group.name for group in user.groups]}
+
+
+@router.get("/")
+async def list_users(
+        user: User = Depends(get_current_user),
+        session: Session = Depends(get_session),
+) -> Sequence[User]:
+    stmt = select(User)
+    return session.exec(stmt).all()

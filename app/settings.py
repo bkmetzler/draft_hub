@@ -2,16 +2,17 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional
 
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_prefix="DRAFT_HUB_", env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_prefix="DRAFT_HUB_", env_file="env", extra="ignore")
 
     app_name: str = "Draft Hub API"
     database_url: str = "sqlite:///./docs.db"
     secret_key: str = "dev-secret-key"
     jwt_expiration_minutes: int = 60
-    redis_url: str | None = None
+    redis_url: Optional[str] = None
 
 
 @lru_cache

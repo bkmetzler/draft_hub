@@ -1,9 +1,14 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
-from typing import List, Optional
+from datetime import datetime
+from datetime import timezone
+from typing import List
+from typing import Optional
 
-from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
+from sqlmodel import UniqueConstraint
 
 
 def datetime_now() -> datetime:
@@ -22,7 +27,6 @@ class User(TimestampMixin, SQLModel, table=True):
     __tablename__ = "user"
 
     id: Optional[int] = Field(default=None, primary_key=True)
-    username: str = Field(index=True, sa_column_kwargs={"unique": True})
     email: str = Field(index=True, sa_column_kwargs={"unique": True})
     password_hash: str
 
