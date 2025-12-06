@@ -3,7 +3,16 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
-from app.database.models import Document, DocumentTenant, Project, Tenant, User
+from app.database.models import (
+    Document,
+    DocumentTenant,
+    Group,
+    GroupMembership,
+    Project,
+    Tenant,
+    TenantProject,
+    User,
+)
 from ..database import get_session
 from ..security import get_current_user
 
@@ -24,11 +33,14 @@ def create_tenant(
     if session.exec(select(Tenant).where(Tenant.name == name)).first():
         raise HTTPException(status_code=400, detail="Tenant already exists")
     tenant = Tenant(name=name, description=description)
-    session.merge(tenant)
-    tenant.groups.append(
-        
+    session.add(tenant)
+    session.flush()
 
-    )
+    admin_group = Group(name="Admin", scope_type="tenant", scope_id=tenant.id, tenant=tenant)
+    session.add(admin_group)
+    session.flush()
+
+    session.add(GroupMembership(group_id=admin_group.id, user_id=user.id))
 
     session.commit()
     session.refresh(tenant)
@@ -52,6 +64,17 @@ def create_project(
     session.add(project)
     session.flush()
     session.add(TenantProject(tenant_id=tenant_id, project_id=project.id))
+
+    project_admin_group = Group(
+        name="Admin",
+        scope_type="project",
+        scope_id=project.id,
+    )
+    session.add(project_admin_group)
+    session.flush()
+
+    session.add(GroupMembership(group_id=project_admin_group.id, user_id=user.id))
+
     session.commit()
     session.refresh(project)
     return project

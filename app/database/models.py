@@ -35,6 +35,61 @@ class User(TimestampMixin, SQLModel, table=True):
     amendments: List["Amendment"] = Relationship(back_populates="author")
     votes: List["Vote"] = Relationship(back_populates="user")
 
+    def has_group(
+            self,
+            name: str,
+            *,
+            scope_type: str | None = None,
+            scope_id: int | None = None,
+    ) -> bool:
+        """Return True when the user belongs to a matching group.
+
+        The optional ``scope_type`` and ``scope_id`` filters allow checking for a
+        group within a particular scope (for example, a tenant or project). When
+        omitted, only the group name is considered.
+        """
+
+        for membership in self.groups:
+            group = membership.group
+            if group is None:
+                continue
+            if group.name != name:
+                continue
+            if scope_type is not None and group.scope_type != scope_type:
+                continue
+            if scope_id is not None and group.scope_id != scope_id:
+                continue
+            return True
+
+        return False
+
+    def has_groups(self, in_list: list[str]) -> bool:
+        """Return True when the user belongs to any named group in ``in_list``."""
+
+        if not in_list:
+            return False
+
+        names = set(in_list)
+
+        for membership in self.groups:
+            group = membership.group
+            if group is None:
+                continue
+            if group.name in names:
+                return True
+
+        return False
+
+    def is_root(self) -> bool:
+        """Indicate whether the user is a member of the root scope.
+
+        Root-scope users are intended to have access across all tenants,
+        projects, and documents regardless of their specific group membership
+        elsewhere.
+        """
+
+        return self.has_group("Admin", scope_type="root")
+
 
 class UserPasswordHash(SQLModel, table=True):
     __tablename__ = "user_password_hash"
