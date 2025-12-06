@@ -5,7 +5,7 @@ from fastapi import status
 from sqlmodel import Session
 from sqlmodel import select
 
-from ..database.models import User, datetime_now
+from ..database.models import Group, GroupMembership, User, datetime_now
 from ..database.models import UserPasswordHash
 
 from ..database import get_session
@@ -33,6 +33,21 @@ async def register(email: str, password: str, session: Session = Depends(get_ses
     session.add(user)
     session.flush()
     session.add(UserPasswordHash(user_id=user.id, password_hash=hashed, created_at=datetime_now()))
+
+    root_group = session.exec(
+        select(Group).where(
+            Group.name == "Admin",
+            Group.scope_type == "root",
+            Group.scope_id == 0,
+        )
+    ).first()
+
+    if root_group is None:
+        root_group = Group(name="Admin", scope_type="root", scope_id=0)
+        session.add(root_group)
+        session.flush()
+        session.add(GroupMembership(group_id=root_group.id, user_id=user.id))
+
     session.commit()
     token, expires = create_access_token(user)
     return {"access_token": token, "token_type": "bearer", "expires": expires}
