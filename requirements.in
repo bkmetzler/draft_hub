@@ -1,0 +1,9 @@
+PyJWT
+jwt
+pydantic-settings
+fastapi
+fastapi[standard]
+sqlmodel
+alembic
+uvicorn
+redis

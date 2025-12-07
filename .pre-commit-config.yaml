@@ -1,13 +1,56 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-merge-conflict
       - id: end-of-file-fixer
       - id: trailing-whitespace
   - repo: https://github.com/psf/black
-    rev: 24.4.2
+    rev: 25.11.0
     hooks:
       - id: black
         additional_dependencies: ["click>=8.1.7"]
+  - repo: https://github.com/PyCQA/flake8
+    rev: 7.3.0
+    hooks:
+    - id: flake8
+      additional_dependencies:
+        - pep8-naming
+        - flake8-implicit-str-concat
+        - flake8-pyproject
+  - repo: https://github.com/asottile/reorder_python_imports
+    rev: v3.16.0
+    hooks:
+    - id: reorder-python-imports
+      args:
+        - --py312-plus
+
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.0
+    hooks:
+      - id: mypy
+        args:
+          - --non-interactive
+          - --install-types
+          - --no-strict-optional
+        additional_dependencies:
+          - types-mock
+          - types-freezegun
+
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
+    hooks:
+    - id: pyupgrade
+      args: [--py312-plus]
+
+  - repo: https://github.com/jazzband/pip-tools
+    rev: 7.4.1
+    hooks:
+    - id: pip-compile
+      name: pip-compile requirements.in
+      files: ^(requirements\.in|requirements\.txt)$
+      args:
+      - "--output-file"
+      - "requirements.txt"
+      - "requirements.in"
