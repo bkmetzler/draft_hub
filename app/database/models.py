@@ -1,18 +1,41 @@
 from __future__ import annotations
 
-from datetime import datetime
-from datetime import timezone
-from typing import List
-from typing import Optional
+import uuid
+from datetime import datetime, timezone
+from enum import Enum
+from typing import List, Optional
 
-from sqlmodel import Field
-from sqlmodel import Relationship
-from sqlmodel import SQLModel
-from sqlmodel import UniqueConstraint
+from sqlmodel import Field, Relationship, SQLModel, UniqueConstraint
 
 
 def datetime_now() -> datetime:
     return datetime.now(tz=timezone.utc)
+
+
+def generate_uuid() -> str:
+    return str(uuid.uuid4())
+
+
+class Permissions(Enum):
+    NONE = 0
+    READ = 1
+    WRITE = 2
+    EXECUTE = 4
+
+    def has_read(self) -> bool:
+        if self.READ == self:
+            return True
+        return False
+
+    def has_write(self) -> bool:
+        if self.WRITE == self:
+            return True
+        return False
+
+    def has_execute(self) -> bool:
+        if self.EXECUTE == self:
+            return True
+        return False
 
 
 class TimestampMixin(SQLModel):
@@ -26,8 +49,8 @@ class TimestampMixin(SQLModel):
 class User(TimestampMixin, SQLModel, table=True):
     __tablename__ = "user"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    email: str = Field(index=True, sa_column_kwargs={"unique": True})
+    id: Optional[str] = Field(primary_key=True, default_factory=generate_uuid)
+    email: str = Field(index=True, unique=True)
     password_hash: str
 
     password_history: List["UserPasswordHash"] = Relationship(back_populates="user")
@@ -36,11 +59,11 @@ class User(TimestampMixin, SQLModel, table=True):
     votes: List["Vote"] = Relationship(back_populates="user")
 
     def has_group(
-            self,
-            name: str,
-            *,
-            scope_type: str | None = None,
-            scope_id: int | None = None,
+        self,
+        name: str,
+        *,
+        scope_type: str | None = None,
+        scope_id: int | None = None,
     ) -> bool:
         """Return True when the user belongs to a matching group.
 
@@ -94,8 +117,8 @@ class User(TimestampMixin, SQLModel, table=True):
 class UserPasswordHash(SQLModel, table=True):
     __tablename__ = "user_password_hash"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    user_id: int = Field(foreign_key="user.id")
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
+    user_id: str = Field(foreign_key="user.id")
     password_hash: str
     created_at: datetime = Field(default_factory=datetime_now, nullable=False)
 
@@ -105,12 +128,11 @@ class UserPasswordHash(SQLModel, table=True):
 class Tenant(TimestampMixin, SQLModel, table=True):
     __tablename__ = "tenant"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    name: str = Field(index=True, sa_column_kwargs={"unique": True})
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
+    name: str = Field(index=True)
     description: Optional[str] = None
 
     projects: List["TenantProject"] = Relationship(back_populates="tenant")
-    documents: List["DocumentTenant"] = Relationship(back_populates="tenant")
     groups: List["Group"] = Relationship(back_populates="tenant")
 
 
@@ -118,8 +140,8 @@ class Project(TimestampMixin, SQLModel, table=True):
     __tablename__ = "project"
     __table_args__ = (UniqueConstraint("tenant_id", "name", name="tenant_project_unique"),)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    tenant_id: int = Field(foreign_key="tenant.id")
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
+    tenant_id: str = Field(foreign_key="tenant.id")
     name: str
     description: Optional[str] = None
     created_by: int = Field(foreign_key="user.id")
@@ -132,9 +154,9 @@ class TenantProject(SQLModel, table=True):
     __tablename__ = "tenant_project"
     __table_args__ = (UniqueConstraint("tenant_id", "project_id", name="tenant_project_unique_link"),)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    tenant_id: int = Field(foreign_key="tenant.id")
-    project_id: int = Field(foreign_key="project.id")
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
+    tenant_id: str = Field(foreign_key="tenant.id")
+    project_id: str = Field(foreign_key="project.id")
 
     tenant: Tenant = Relationship(back_populates="projects")
     project: Project = Relationship(back_populates="tenant_link")
@@ -143,40 +165,27 @@ class TenantProject(SQLModel, table=True):
 class Document(TimestampMixin, SQLModel, table=True):
     __tablename__ = "document"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    project_id: int = Field(foreign_key="project.id")
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
+    project_id: str = Field(foreign_key="project.id")
     title: str
     summary: Optional[str] = None
     text: str
-    created_by: int = Field(foreign_key="user.id")
+    created_by: str = Field(foreign_key="user.id")
 
     project: Project = Relationship(back_populates="documents")
     amendments: List["Amendment"] = Relationship(back_populates="document")
-    tenant_links: List["DocumentTenant"] = Relationship(back_populates="document")
-
-
-class DocumentTenant(SQLModel, table=True):
-    __tablename__ = "document_tenant"
-    __table_args__ = (UniqueConstraint("tenant_id", "document_id", name="document_tenant_unique"),)
-
-    id: Optional[int] = Field(default=None, primary_key=True)
-    tenant_id: int = Field(foreign_key="tenant.id")
-    document_id: int = Field(foreign_key="document.id")
-
-    tenant: Tenant = Relationship(back_populates="documents")
-    document: Document = Relationship(back_populates="tenant_links")
 
 
 class Amendment(TimestampMixin, SQLModel, table=True):
     __tablename__ = "amendment"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    document_id: int = Field(foreign_key="document.id")
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
+    document_id: str = Field(foreign_key="document.id")
     title: str
     description: Optional[str] = None
     proposed_text: str
     status: str = Field(default="open")
-    created_by: int = Field(foreign_key="user.id")
+    created_by: str = Field(foreign_key="user.id")
 
     document: Document = Relationship(back_populates="amendments")
     author: User = Relationship(back_populates="amendments")
@@ -187,7 +196,7 @@ class Amendment(TimestampMixin, SQLModel, table=True):
 class Patch(TimestampMixin, SQLModel, table=True):
     __tablename__ = "patch"
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
     description: Optional[str] = None
     patch_text: str
 
@@ -198,7 +207,7 @@ class AmendmentPatch(SQLModel, table=True):
     __tablename__ = "amendment_patch"
     __table_args__ = (UniqueConstraint("amendment_id", "patch_id", name="amendment_patch_unique"),)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
     amendment_id: int = Field(foreign_key="amendment.id")
     patch_id: int = Field(foreign_key="patch.id")
 
@@ -210,11 +219,10 @@ class Vote(SQLModel, table=True):
     __tablename__ = "vote"
     __table_args__ = (UniqueConstraint("amendment_id", "user_id", name="unique_vote_per_user"),)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    amendment_id: int = Field(foreign_key="amendment.id")
-    user_id: int = Field(foreign_key="user.id")
-    value: int
-
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
+    amendment_id: str = Field(foreign_key="amendment.id")
+    user_id: str = Field(foreign_key="user.id")
+    value: bool
     amendment: Amendment = Relationship(back_populates="votes")
     user: User = Relationship(back_populates="votes")
 
@@ -223,11 +231,12 @@ class Group(SQLModel, table=True):
     __tablename__ = "group_entity"
     __table_args__ = (UniqueConstraint("scope_type", "scope_id", "name", name="group_scope_name_unique"),)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
     name: str
     scope_type: str
     scope_id: int
 
+    permissions: Permissions = Field(default=Permissions.READ)
     memberships: List["GroupMembership"] = Relationship(back_populates="group")
     tenant: Optional[Tenant] = Relationship(back_populates="groups")
 
@@ -236,9 +245,9 @@ class GroupMembership(SQLModel, table=True):
     __tablename__ = "group_membership"
     __table_args__ = (UniqueConstraint("group_id", "user_id", name="unique_group_membership"),)
 
-    id: Optional[int] = Field(default=None, primary_key=True)
-    group_id: int = Field(foreign_key="group_entity.id")
-    user_id: int = Field(foreign_key="user.id")
+    id: str = Field(primary_key=True, default_factory=generate_uuid)
+    group_id: str = Field(foreign_key="group_entity.id")
+    user_id: str = Field(foreign_key="user.id")
 
     group: Group = Relationship(back_populates="memberships")
     user: User = Relationship(back_populates="groups")
