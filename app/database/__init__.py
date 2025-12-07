@@ -7,7 +7,8 @@ from fastapi import Depends
 from sqlalchemy import Engine
 from sqlmodel import Session, SQLModel, create_engine
 
-from app.settings import Settings, get_settings
+from app.settings import Settings
+from app.settings import get_settings
 
 
 def get_engine(settings: Settings = Depends(get_settings)) -> Engine:

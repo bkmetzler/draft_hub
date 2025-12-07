@@ -1,18 +1,12 @@
 from typing import Optional
 
-from fastapi import APIRouter
-from fastapi import Depends
-from fastapi import HTTPException
-from sqlmodel import Session
-from sqlmodel import select
+from fastapi import APIRouter, Depends, HTTPException
+from sqlmodel import Session, select
 
-from ..routers.helpers.diff import render_diff
 from ..database import get_session
-from ..database.models import Amendment, User
-from ..database.models import AmendmentPatch
-from ..database.models import Document
-from ..database.models import Patch
-from ..database.models import Vote
+from ..database.models import Amendment, AmendmentPatch, Document, Patch, User, Vote
+from ..helpers import falsy, truthy
+from ..routers.helpers.diff import render_diff
 from ..security import get_current_user
 
 router = APIRouter(prefix="/amendment", tags=["Amendment"])
@@ -83,14 +77,14 @@ def amendment_diff(amendment_id: int, session: Session = Depends(get_session)):
 
 @router.post("/{amendment_id}/vote")
 def vote(amendment_id: int, value: int, session: Session = Depends(get_session), user=Depends(get_current_user)):
-    if value not in (-1, 1):
+    if falsy(value):
         raise HTTPException(status_code=400, detail="Vote must be -1 or 1")
     amendment = session.get(Amendment, amendment_id)
     if amendment is None:
         raise HTTPException(status_code=404, detail="Amendment not found")
     existing = session.exec(select(Vote).where(Vote.amendment_id == amendment_id, Vote.user_id == user.id)).first()
     if existing:
-        existing.value = value
+        existing.value = truthy(value)
         session.add(existing)
     else:
         session.add(Vote(amendment_id=amendment_id, user_id=user.id, value=value))
