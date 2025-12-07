@@ -1,11 +1,17 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import SQLModel, select
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from sqlmodel import select
+from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
-from app.database.models import Group, Project, Tenant
+from app.database.models import Group
+from app.database.models import Project
+from app.database.models import Tenant
 from app.database.models.groups import Permissions
 
 router = APIRouter(prefix="/api/v1/project", tags=["project"])
@@ -26,7 +32,9 @@ async def create_project(payload: ProjectCreate, session: AsyncSession = Depends
     session.add(project)
     await session.commit()
     await session.refresh(project)
-    moderator_group = Group(name="moderators", project_id=project.id, permissions=int(Permissions.APPROVE | Permissions.DENY))
+    moderator_group = Group(
+        name="moderators", project_id=project.id, permissions=int(Permissions.APPROVE | Permissions.DENY)
+    )
     session.add(moderator_group)
     await session.commit()
     return project

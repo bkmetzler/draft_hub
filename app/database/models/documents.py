@@ -1,10 +1,17 @@
+from __future__ import annotations
+
 import uuid
-from typing import List, Optional
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field
+from sqlmodel import Relationship
+
+from .amendments import Amendment
+from .groups import Group
+from .helpers import BaseSQLModel
+from .projects import Project
 
 
-class Document(SQLModel, table=True):
+class Document(BaseSQLModel, table=True):
     __tablename__ = "document"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -12,6 +19,6 @@ class Document(SQLModel, table=True):
     body: str
     project_id: uuid.UUID = Field(foreign_key="project.id")
 
-    project: Optional["Project"] = Relationship(back_populates="documents")
-    amendments: List["Amendment"] = Relationship(back_populates="document")
-    groups: List["Group"] = Relationship(back_populates="document")
+    project: Project | None = Relationship(back_populates="documents")
+    amendments: list[Amendment] = Relationship(back_populates="document")
+    groups: list[Group] = Relationship(back_populates="document")

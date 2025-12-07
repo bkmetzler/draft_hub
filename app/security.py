@@ -1,8 +1,10 @@
 import hashlib
 import hmac
 import os
-from datetime import datetime, timedelta, timezone
-from typing import Any, Optional
+from datetime import datetime
+from datetime import timedelta
+from datetime import timezone
+from typing import Any
 
 import jwt
 
@@ -16,7 +18,7 @@ def _pbkdf2_hash(password: str, salt: bytes) -> str:
     return dk.hex()
 
 
-def hash_password(password: str, salt: Optional[bytes] = None) -> str:
+def hash_password(password: str, salt: bytes | None = None) -> str:
     salt = salt or os.urandom(16)
     hashed = _pbkdf2_hash(password, salt)
     return f"{salt.hex()}:{hashed}"
@@ -32,7 +34,7 @@ def verify_password(password: str, stored: str) -> bool:
     return hmac.compare_digest(candidate, hashed)
 
 
-def create_access_token(subject: str, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(subject: str, expires_delta: timedelta | None = None) -> str:
     expire = datetime.now(timezone.utc) + (
         expires_delta if expires_delta else timedelta(minutes=settings.access_token_expire_minutes)
     )

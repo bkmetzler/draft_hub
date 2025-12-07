@@ -1,11 +1,16 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException
-from sqlmodel import SQLModel, select
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from sqlmodel import select
+from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
-from app.database.models import Amendment, Document, Patch
+from app.database.models import Amendment
+from app.database.models import Document
+from app.database.models import Patch
 
 router = APIRouter(prefix="/api/v1/amendment", tags=["amendment"])
 
@@ -26,7 +31,9 @@ async def get_amendment(amendment_id: uuid.UUID, session: AsyncSession = Depends
 
 
 @router.post("/{document_id}", response_model=Amendment)
-async def create_amendment(document_id: uuid.UUID, payload: AmendmentCreate, session: AsyncSession = Depends(get_session)) -> Amendment:
+async def create_amendment(
+    document_id: uuid.UUID, payload: AmendmentCreate, session: AsyncSession = Depends(get_session)
+) -> Amendment:
     document_result = await session.exec(select(Document).where(Document.id == document_id))
     document = document_result.first()
     if not document:
@@ -48,5 +55,5 @@ async def list_patches(document_id: uuid.UUID, session: AsyncSession = Depends(g
     ids = amendment_ids.all()
     if not ids:
         return []
-    patches = await session.exec(select(Patch).where(Patch.amendment_id.in_(ids)))
+    patches = await session.exec(select(Patch).where(Patch.amendment_id.in_(ids)))  # type: ignore[attr-defined]
     return patches.all()

@@ -1,13 +1,21 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import select
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
-from app.database.models import User, UserCreate, UserPasswordHash
-from app.security import create_access_token, hash_password, verify_password
+from app.database.models import User
+from app.database.models import UserCreate
+from app.database.models import UserPasswordHash
+from app.security import create_access_token
+from app.security import hash_password
+from app.security import verify_password
 
 router = APIRouter(prefix="/api/v1/auth", tags=["auth"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/token")

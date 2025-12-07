@@ -1,14 +1,21 @@
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
 from app.database import create_db_and_tables
 from app.middleware.configure import add_middlewares
-from app.routers import amendments, auth, documents, general, projects, tenants, users
+from app.routers import amendments
+from app.routers import auth
+from app.routers import documents
+from app.routers import general
+from app.routers import projects
+from app.routers import tenants
+from app.routers import users
 
 
 @asynccontextmanager
-async def lifespan(_: FastAPI):
+async def lifespan(_: FastAPI) -> AsyncGenerator[None, None]:
     await create_db_and_tables()
     yield
 

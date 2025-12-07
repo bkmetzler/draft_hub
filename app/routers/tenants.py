@@ -1,11 +1,16 @@
 import uuid
 
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import SQLModel, select
+from fastapi import APIRouter
+from fastapi import Depends
+from fastapi import HTTPException
+from fastapi import status
+from sqlmodel import select
+from sqlmodel import SQLModel
 from sqlmodel.ext.asyncio.session import AsyncSession
 
 from app.database import get_session
-from app.database.models import Group, Tenant
+from app.database.models import Group
+from app.database.models import Tenant
 from app.database.models.groups import Permissions
 
 router = APIRouter(prefix="/api/v1/tenant", tags=["tenant"])
@@ -21,7 +26,9 @@ async def create_tenant(payload: TenantCreate, session: AsyncSession = Depends(g
     session.add(tenant)
     await session.commit()
     await session.refresh(tenant)
-    moderator_group = Group(name="moderators", tenant_id=tenant.id, permissions=int(Permissions.APPROVE | Permissions.DENY))
+    moderator_group = Group(
+        name="moderators", tenant_id=tenant.id, permissions=int(Permissions.APPROVE | Permissions.DENY)
+    )
     session.add(moderator_group)
     await session.commit()
     return tenant

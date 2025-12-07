@@ -1,12 +1,16 @@
+from __future__ import annotations
+
 import uuid
-from typing import List, Optional
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
 
-from .groups import Group
+from .group_memberships import GroupMembership
+from .helpers import BaseSQLModel
 
 
-class User(SQLModel, table=True):
+class User(BaseSQLModel, table=True):
     __tablename__ = "user"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -14,7 +18,7 @@ class User(SQLModel, table=True):
     email: str = Field(index=True, unique=True)
     hashed_password: str
 
-    memberships: List["GroupMembership"] = Relationship(back_populates="user")
+    memberships: list[GroupMembership] = Relationship(back_populates="user")
 
     def has_groups(self, grps: list[str]) -> bool:
         group_names = {membership.group.name for membership in self.memberships if membership.group}
@@ -47,7 +51,7 @@ class UserRead(SQLModel):
     email: str
 
 
-class UserPasswordHash(SQLModel, table=True):
+class UserPasswordHash(BaseSQLModel, table=True):
     __tablename__ = "user_password_hash"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)

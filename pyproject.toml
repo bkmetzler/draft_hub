@@ -36,3 +36,18 @@ target-version = ["py312"]
 [tool.ruff]
 line-length = 120
 lint.select = ["E", "F", "I"]
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.mypy]
+plugins = [
+
+]
+warn_return_any = false
+disallow_untyped_defs = true
+show_error_codes = true
+no_implicit_optional = true
+warn_unused_ignores = true
+exclude = ["scripts", "docs", "tests"]
+ignore_missing_imports = true

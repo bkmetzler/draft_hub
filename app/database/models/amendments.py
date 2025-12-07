@@ -1,10 +1,16 @@
+from __future__ import annotations
+
 import uuid
-from typing import List, Optional
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field
+from sqlmodel import Relationship
+
+from .documents import Document
+from .helpers import BaseSQLModel
+from .patches import Patch
 
 
-class Amendment(SQLModel, table=True):
+class Amendment(BaseSQLModel, table=True):
     __tablename__ = "amendment"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
@@ -12,5 +18,5 @@ class Amendment(SQLModel, table=True):
     document_id: uuid.UUID = Field(foreign_key="document.id")
     approved: bool = False
 
-    document: Optional["Document"] = Relationship(back_populates="amendments")
-    patches: List["Patch"] = Relationship(back_populates="amendment")
+    document: Document | None = Relationship(back_populates="amendments")
+    patches: list[Patch] = Relationship(back_populates="amendment")

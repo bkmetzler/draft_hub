@@ -1,8 +1,17 @@
+from __future__ import annotations
+
 import enum
 import uuid
-from typing import List, Optional
 
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field
+from sqlmodel import Relationship
+from sqlmodel import SQLModel
+
+from .documents import Document
+from .group_memberships import GroupMembership
+from .helpers import BaseSQLModel
+from .projects import Project
+from .tenants import Tenant
 
 
 class Permissions(enum.IntFlag):
@@ -14,20 +23,20 @@ class Permissions(enum.IntFlag):
     COMMIT = 32
 
 
-class Group(SQLModel, table=True):
+class Group(BaseSQLModel, table=True):
     __tablename__ = "groups"
 
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     name: str
     permissions: int = Field(default=int(Permissions.READ | Permissions.WRITE))
-    tenant_id: Optional[uuid.UUID] = Field(default=None, foreign_key="tenant.id")
-    project_id: Optional[uuid.UUID] = Field(default=None, foreign_key="project.id")
-    document_id: Optional[uuid.UUID] = Field(default=None, foreign_key="document.id")
+    tenant_id: uuid.UUID | None = Field(default=None, foreign_key="tenant.id")
+    project_id: uuid.UUID | None = Field(default=None, foreign_key="project.id")
+    document_id: uuid.UUID | None = Field(default=None, foreign_key="document.id")
 
-    tenant: Optional["Tenant"] = Relationship(back_populates="groups")
-    project: Optional["Project"] = Relationship(back_populates="groups")
-    document: Optional["Document"] = Relationship(back_populates="groups")
-    memberships: List["GroupMembership"] = Relationship(back_populates="group")
+    tenant: Tenant | None = Relationship(back_populates="groups")
+    project: Project | None = Relationship(back_populates="groups")
+    document: Document | None = Relationship(back_populates="groups")
+    memberships: list[GroupMembership] = Relationship(back_populates="group")
 
 
 class GroupRead(SQLModel):

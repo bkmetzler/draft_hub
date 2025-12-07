@@ -1,12 +1,12 @@
 from collections.abc import AsyncGenerator
 
-from sqlmodel import SQLModel
-from sqlmodel.ext.asyncio.session import AsyncSession
-from sqlmodel.ext.asyncio.engine import create_async_engine
 from sqlalchemy.ext.asyncio import async_sessionmaker
+from sqlmodel import SQLModel
+from sqlmodel.ext.asyncio.engine import create_async_engine
+from sqlmodel.ext.asyncio.session import AsyncSession
 
-from app.settings import get_settings
 from . import models  # noqa: F401
+from app.settings import get_settings
 
 settings = get_settings()
 engine = create_async_engine(settings.database_url, echo=False, future=True)
