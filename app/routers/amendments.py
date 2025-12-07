@@ -6,7 +6,7 @@ from fastapi import HTTPException
 from sqlmodel import Session
 from sqlmodel import select
 
-from .helpers.diff import render_diff
+from ..routers.helpers.diff import render_diff
 from ..database import get_session
 from ..database.models import Amendment, User
 from ..database.models import AmendmentPatch
@@ -20,12 +20,12 @@ router = APIRouter(prefix="/amendment", tags=["Amendment"])
 
 @router.post("/document/{document_id}")
 def propose_amendment(
-        document_id: int,
-        title: str,
-        description: Optional[str],
-        proposed_text: str = "",
-        session: Session = Depends(get_session),
-        user: User = Depends(get_current_user),
+    document_id: int,
+    title: str,
+    description: Optional[str],
+    proposed_text: str = "",
+    session: Session = Depends(get_session),
+    user: User = Depends(get_current_user),
 ):
     document = session.get(Document, document_id)
     if document is None:
@@ -45,11 +45,11 @@ def propose_amendment(
 
 @router.post("/{amendment_id}/patches")
 def attach_patch(
-        amendment_id: int,
-        patch_text: str,
-        description: str | None = None,
-        session: Session = Depends(get_session),
-        user=Depends(get_current_user),
+    amendment_id: int,
+    patch_text: str,
+    description: str | None = None,
+    session: Session = Depends(get_session),
+    user=Depends(get_current_user),
 ):
     amendment = session.get(Amendment, amendment_id)
     if amendment is None:

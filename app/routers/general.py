@@ -9,7 +9,7 @@ from ..database.models import Group, GroupMembership, User, datetime_now
 from ..database.models import UserPasswordHash
 
 from ..database import get_session
-from ..security import create_access_token, hash_password, verify_password, decode_jwt_and_groups, get_current_user
+from ..security import create_access_token, hash_password, verify_password, get_current_user
 
 
 router = APIRouter(tags=["General"])
@@ -18,7 +18,6 @@ router = APIRouter(tags=["General"])
 @router.get("/health")
 async def healthcheck():
     return {"status": "ok"}
-
 
 
 @router.post("/register")
@@ -37,8 +36,8 @@ async def register(email: str, password: str, session: Session = Depends(get_ses
     root_group = session.exec(
         select(Group).where(
             Group.name == "Admin",
-            Group.scope_type == "root",
-            Group.scope_id == 0,
+            Group.scope_type == "root",  # tenant, project, root or general
+            Group.scope_id == 0,  # Tenant Id or Project Id
         )
     ).first()
 
@@ -64,9 +63,9 @@ async def login(email: str, password: str, session: Session = Depends(get_sessio
 
 @router.post("/reset-password")
 async def reset_password(
-        new_password: str,
-        user: User = Depends(get_current_user),
-        session: Session = Depends(get_session),
+    new_password: str,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
 ):
     hashed = hash_password(new_password)
     user.password_hash = hashed

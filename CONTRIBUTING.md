@@ -14,7 +14,7 @@
 - /settings.py
 
 # API Endpoints
-## Health/General 
+## Health/General
 - GET /api/v1/health
 
 ## Tenant
@@ -30,8 +30,8 @@
 - POST /api/v1/document/{document_id}/members
 - GET /api/v1/document/{document_id}/amendments
 - POST /api/v1/document/{document_id}/amendments
- 
- 
+
+
 ## Project
 - GET /api/v1/project
 - POST /api/v1/project
@@ -41,4 +41,3 @@
 ## Amendment
 - GET /api/v1/amendment/{amendment_id}
 - POST /api/v1/amendment/{document_id}
-

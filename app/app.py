@@ -1,14 +1,13 @@
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import Generator, AsyncGenerator
+from typing import AsyncGenerator
 
 from fastapi import FastAPI
 
-
-from .middleware.configure import configure_middleware
-from .settings import get_settings, Settings
 from .database import create_db_and_tables
-from .routers import amendments, auth, tenants, users, general
+from .middleware.configure import configure_middleware
+from .routers import amendments, auth, general, tenants, users
+from .settings import Settings, get_settings
 
 
 @dataclass
@@ -31,6 +30,7 @@ ROUTES = [
     amendments.router,
     tenants.router,
 ]
+
 
 def create_app() -> FastAPI:
     settings = get_settings()

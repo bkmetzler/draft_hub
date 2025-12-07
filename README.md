@@ -73,7 +73,7 @@ python -c "from app.database import create_db_and_tables; create_db_and_tables()
 
 1.) Create a web Application and api
 # Description
-┌ New documents 
+┌ New documents
 ├─ Copy/Paste into Textbox
 ├─ Open file (txt, rtf, doc, html, etc)
 
@@ -117,7 +117,7 @@ python -c "from app.database import create_db_and_tables; create_db_and_tables()
 3.) Class that displays differences between two text strings
 
 # General Requirements
-1.) JWT Authentication that can be used in the UI application to authenticate against the API.  
+1.) JWT Authentication that can be used in the UI application to authenticate against the API.
 
 # Python Helper Functions
 1.) Python function to decode JWT and query Groups from database.

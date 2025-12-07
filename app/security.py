@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from datetime import datetime, timedelta, timezone
 from typing import List
 
@@ -10,8 +8,9 @@ from sqlmodel import Session, select
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.database.models import GroupMembership, User
-from .settings import get_settings
+
 from .database import get_session
+from .settings import get_settings
 
 bearer_scheme = HTTPBearer(auto_error=False)
 settings = get_settings()
@@ -28,22 +27,22 @@ def verify_password(raw_password: str, hashed: str) -> bool:
 def create_access_token(user: User) -> tuple[str, datetime]:
     expiration = datetime.now(tz=timezone.utc) + timedelta(minutes=settings.jwt_expiration_minutes)
     payload = {"sub": user.id, "email": user.email, "exp": expiration}
-    token = jwt.encode(payload, settings.secret_key, algorithm="HS256")
+    token = jwt.encode(payload, settings.secret_key, algorithm="HS256")  # type: ignore[attr-defined]
     return token, expiration
 
 
 def decode_jwt(token: str) -> dict:
     try:
-        return jwt.decode(token, settings.secret_key, algorithms=["HS256"], options={"require": ["exp", "sub"]})
-    except jwt.ExpiredSignatureError as exc:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired") from exc
-    except jwt.InvalidTokenError as exc:
+        return jwt.decode(
+            token, settings.secret_key, algorithms=["HS256"], options={"require": ["exp", "sub"]}
+        )  # type: ignore[attr-defined]
+    except jwt.exceptions.JWTException as exc:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token") from exc
 
 
 def decode_jwt_and_groups(
-        credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-        session: Session = Depends(get_session),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    session: Session = Depends(get_session),
 ) -> tuple[User, List[str]]:
     if credentials is None or not credentials.credentials:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing bearer token")
@@ -63,8 +62,8 @@ def decode_jwt_and_groups(
 
 
 def get_current_user(
-        credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
-        session: Session = Depends(get_session),
+    credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
+    session: Session = Depends(get_session),
 ) -> User:
     user, _ = decode_jwt_and_groups(credentials, session)  # type: ignore[arg-type]
     return user

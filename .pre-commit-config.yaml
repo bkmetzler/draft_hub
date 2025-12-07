@@ -11,8 +11,3 @@ repos:
     hooks:
       - id: black
         additional_dependencies: ["click>=8.1.7"]
-  - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.5.6
-    hooks:
-      - id: ruff
-        args: ["--fix"]
